@@ -2,6 +2,25 @@ module NdSpline
   use, intrinsic :: iso_fortran_env
   implicit none
   integer, parameter :: dp = real64
+  public ::spline
+  private :: abscissa
+  private :: abscissa_interpolant
+  private :: grid_interpolant
+  private :: fin_spline
+  private :: init_spline
+  private :: interpolate
+  private :: interpolate_1d
+  private :: set_coefs
+  private :: set_coefs_1d
+  private :: fin_abscissa
+  private :: init_abscissa
+  private :: set_knot_vector
+  private :: fin_grid_interpolant
+  private :: init_grid_interpolant
+  private :: fin_abscissa_interpolant
+  private :: init_abscissa_interpolant
+  private :: find_interval
+  private :: basis_function
 
   type :: abscissa
     real(dp), allocatable :: x(:), t(:)
@@ -31,7 +50,7 @@ module NdSpline
     generic :: fin => fin_spline
   end type spline
 
-  type, private :: abscissa_interpolant
+  type :: abscissa_interpolant
     real(dp), allocatable :: x(:)
     integer :: n = 0
   contains
@@ -41,7 +60,7 @@ module NdSpline
     generic :: fin => fin_abscissa_interpolant
   end type abscissa_interpolant
 
-  type, private :: grid_interpolant
+  type :: grid_interpolant
     type(abscissa_interpolant), allocatable :: Ndrctn(:)
     integer :: ndim = 0
     integer :: n_interpolant = 0
@@ -125,17 +144,20 @@ contains
       end if
 
       if(i /= 1) then
-        tmp_org = reshape(transpose(tmp_int), shape(tmp_org))
+        !tmp_org = reshape(transpose(tmp_int), shape(tmp_org))
+        tmp_org = reshape(tmp_int, shape(tmp_org))
         deallocate(tmp_int)
       end if
-      allocate(tmp_int(grid%Ndrctn(i)%n, n / this%Ndrctn(i)%nx))
+      !allocate(tmp_int(grid%Ndrctn(i)%n, n / this%Ndrctn(i)%nx))
+      allocate(tmp_int(n / this%Ndrctn(i)%nx, grid%Ndrctn(i)%n))
 
       call interpolate_1d(this%Ndrctn(i), grid%Ndrctn(i)%x, tmp_org, tmp_int)
       deallocate(tmp_org)
       n = n * grid%Ndrctn(i)%n / this%Ndrctn(i)%nx
     end do
     allocate(f(grid%n_interpolant))
-    f = reshape(transpose(tmp_int), shape(f))
+    !f = reshape(transpose(tmp_int), shape(f))
+    f = reshape(tmp_int, shape(f))
     deallocate(tmp_int)
     call grid%fin()
   end function interpolate
@@ -159,7 +181,8 @@ contains
     !$omp end do
     !$omp end parallel
     !f = matmul(BMat, coefs)
-    call dgemm("n", "n", m, size(coefs,2), n, 1.d0, BMat, m, coefs, n, 0.d0, f, m)
+    !call dgemm("n", "n", m, size(coefs,2), n, 1.d0, BMat, m, coefs, n, 0.d0, f, m)
+    call dgemm("t", "t", size(coefs,2), m, n, 1.d0, coefs, n, BMat, m, 0.d0, f, size(coefs,2))
   end subroutine interpolate_1d
 
   subroutine set_coefs(this)
