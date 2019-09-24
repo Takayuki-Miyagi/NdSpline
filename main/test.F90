@@ -31,7 +31,7 @@ contains
     integer :: i
     real(8) :: ti
 
-    n = 30
+    n = 10
     allocate(x(n), f(n))
     do i = 1, n
       x(i) = xmin + dble(i-1) / dble(n-1) * (xmax - xmin)

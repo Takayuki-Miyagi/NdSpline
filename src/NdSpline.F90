@@ -218,8 +218,8 @@ contains
     !$omp end do
     !$omp end parallel
     !f = matmul(BMat, coefs)
-    !call dgemm("n", "n", m, size(coefs,2), n, 1.d0, BMat, m, coefs, n, 0.d0, f, m)
-    call dgemm("t", "t", size(coefs,2), m, n, 1.d0, coefs, n, BMat, m, 0.d0, f, size(coefs,2))
+    !call dgemm("n", "n", m, size(coefs,2), n, 1.0_dp, BMat, m, coefs, n, 0.0_dp, f, m)
+    call dgemm("t", "t", size(coefs,2), m, n, 1.0_dp, coefs, n, BMat, m, 0.0_dp, f, size(coefs,2))
   end subroutine interpolate_1d
 
   subroutine set_coefs(this)
@@ -411,18 +411,18 @@ contains
     real(dp), intent(in) :: x
     real(dp) :: f, c1, c2
 
-    f = 0.d0
+    f = 0.0_dp
     if( i + k > size(this%t)) return
     if( k == 1 ) then
-      if(i == this%find_interval(x)) f = 1.d0
+      if(i == this%find_interval(x)) f = 1.0_dp
       return
     end if
     c1 = (x - this%t(i)) / (this%t(i+k-1) - this%t(i))
     c2 = (this%t(i+k)-x) / (this%t(i+k) - this%t(i+1))
-    if( abs(this%t(i+k-1) - this%t(i)) < 1.d-8 ) c1 = 0.d0
-    if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 ) c2 = 0.d0
-    if( abs(this%t(i+k-1) - this%t(i)) < 1.d-8 .and. abs(x - this%t(i)) < 1.d-8 ) c1 = 1.d0
-    if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 .and. abs(x - this%t(i+k)) < 1.d-8 ) c2 = 1.d0
+    if( abs(this%t(i+k-1) - this%t(i)) < 1.d-8 ) c1 = 0.0_dp
+    if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 ) c2 = 0.0_dp
+    if( abs(this%t(i+k-1) - this%t(i)) < 1.d-8 .and. abs(x - this%t(i)) < 1.d-8 ) c1 = 1.0_dp
+    if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 .and. abs(x - this%t(i+k)) < 1.d-8 ) c2 = 1.0_dp
     f = basis_function(this, i, k-1, x) * c1 + basis_function(this, i+1, k-1, x) * c2
   end function basis_function
 end module NdSpline
