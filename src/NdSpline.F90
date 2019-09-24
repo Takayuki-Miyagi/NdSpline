@@ -178,11 +178,9 @@ contains
       end if
 
       if(i /= 1) then
-        !tmp_org = reshape(transpose(tmp_int), shape(tmp_org))
         tmp_org = reshape(tmp_int, shape(tmp_org))
         deallocate(tmp_int)
       end if
-      !allocate(tmp_int(grid%Ndrctn(i)%n, n / this%Ndrctn(i)%nx))
       allocate(tmp_int(n / this%Ndrctn(i)%nx, grid%Ndrctn(i)%n))
 
       call interpolate_1d(this%Ndrctn(i), grid%Ndrctn(i)%x, tmp_org, tmp_int)
@@ -190,7 +188,6 @@ contains
       n = n * grid%Ndrctn(i)%n / this%Ndrctn(i)%nx
     end do
     allocate(f(grid%n_interpolant))
-    !f = reshape(transpose(tmp_int), shape(f))
     f = reshape(tmp_int, shape(f))
     deallocate(tmp_int)
     call grid%fin()
@@ -217,8 +214,6 @@ contains
     end do
     !$omp end do
     !$omp end parallel
-    !f = matmul(BMat, coefs)
-    !call dgemm("n", "n", m, size(coefs,2), n, 1.0_dp, BMat, m, coefs, n, 0.0_dp, f, m)
     call dgemm("t", "t", size(coefs,2), m, n, 1.0_dp, coefs, n, BMat, m, 0.0_dp, f, size(coefs,2))
   end subroutine interpolate_1d
 
@@ -376,13 +371,10 @@ contains
     real(dp), intent(in) :: x
     integer :: idx, i, k, nt
 
-    idx = 0
     k = this%k
     nt = size(this%t)
-    if(x < minval(this%t) .or. x > maxval(this%t)) then
-      write(*,*) "Error: the index is not found in the interval"
-      stop
-    end if
+    idx = 0
+    if(x < minval(this%t) .or. x > maxval(this%t)) return
 
     if(this%t(k) <= x .and. x <= this%t(k+1)) then
       idx = k
