@@ -3,7 +3,7 @@
 #  large dimension matrix
 #--------------------------------------------------
 TARGET=NdSpline
-MODDIR = main
+MODDIR = mod
 HOST=$(strip $(Host))
 DEBUG_MODE=on
 HOST=other
@@ -24,7 +24,7 @@ ifeq ($(strip $(HOST)),other)
     FC=mpif90 -DMPI
   endif
   LFLAGS+= -I/usr/local/include -L/usr/local/lib
-  LFLAGS+= -lblas -llapack -lgsl -lz
+  LFLAGS+= -lblas -llapack
   FFLAGS=-O3
   FFLAGS+= -fopenmp
   ifeq ($(DEBUG_MODE),on)

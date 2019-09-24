@@ -1,4 +1,19 @@
 module NdSpline
+  !
+  ! This is for the n-dimensional spline interpolation using the basis functions.
+  !
+  ! Suppose, we have the function f depending on x, f = f(x), and we know the value of
+  ! f(x) at x = x_{i}. Here, i = 1, ..., n.
+  ! Then, the interpolated f(x) is given as
+  ! f(x) = sum c_{i} phi^{k}_{i}(x), i = 1, ..., n
+  ! with the k-th order polynomial basis function phi^{k}_{i}(x) and coefficient c_{i}.
+  ! Note that the c_{i} is determined so f(x_{i}) = \sum c_{i} phi^{k}_{i}(x).
+  !
+  ! The generalization to the n dimenstion is pretty straightforward.
+  ! For example, in the 4 dimensional, a function f(w,x,y,z) can be
+  ! f(w,x,y,z) = sum c_{ijkl} phi^{kw}_{i}(w) phi^{kx}_{j}(x) phi^{ky}_{k}(y) phi^{kz}_{l}(z)
+  !
+  ! see G. D. Knott, "Interpolating cubic splines", Springer 2000 for details.
   use, intrinsic :: iso_fortran_env
   implicit none
   integer, parameter :: dp = real64
@@ -82,6 +97,14 @@ contains
   end subroutine fin_spline
 
   subroutine init_spline(this, ks, ns, xs, fs)
+    ! constructor of spline
+    ! inputs:
+    ! 'ks' : 1 dimenstionl array for the order of polymial for each abscissa
+    ! 'ns' : 1 dimenstionl array for the dimension of each abscissa
+    ! 'xs' : 1 dimenstionl array for the points of each abscissa. One can use the concatenated array [x,y,...]
+    !           x, y, ... are non dcreasing one dimensional array
+    ! 'fs' : 1 dimenstionl array for the points of each abscissa. One can use fs = reshape( f, (nx*ny*...) )
+    !         Here f is multidimenstional array f(i,j,...). i,j,... have to be correspond to x,y,..., respectively.
     class(spline), intent(inout) :: this
     integer, intent(in) :: ks(:), ns(:)
     real(dp), intent(in) :: xs(:), fs(:)
@@ -112,6 +135,11 @@ contains
     do n = 1, this%ndim
       n_start = n_end + 1
       n_end = n_end + ns(n)
+      if(ks(n) < 1) then
+        write(*,"(a)") "Error in constructor of spline: polynomial order k has to be greater than 0"
+        write(*,"(i3)") ks(n)
+        stop
+      end if
       call this%Ndrctn(n)%init( ks(n), xs(n_start:n_end) )
     end do
 
@@ -121,6 +149,12 @@ contains
   end subroutine init_spline
 
   function interpolate(this, ns, xs) result(f)
+    ! interpolation using the matrix-matrix multiplication
+    ! inputs:
+    ! 'ns': 1 dimenstional array specifying the dimenstion
+    ! 'xs': 1 dimenstional array specifying the interpolants
+    ! output:
+    ! 'f': 1 dimenstional array
     class(spline), intent(inout) :: this
     integer, intent(in) :: ns(:)
     real(dp), intent(in) :: xs(:)
@@ -163,6 +197,9 @@ contains
   end function interpolate
 
   subroutine interpolate_1d(this, x, coefs, f)
+    !
+    !  f_{n} = \sum c_{i} phi_{ni}
+    !
     type(abscissa), intent(in) :: this
     real(dp), intent(in) :: x(:), coefs(:,:)
     real(dp), intent(inout) :: f(:,:)
@@ -186,6 +223,9 @@ contains
   end subroutine interpolate_1d
 
   subroutine set_coefs(this)
+    !
+    ! Here, the coefficient c is determine.
+    !
     class(spline), intent(inout) :: this
     real(dp), allocatable :: tmp_coef(:,:), tmp(:,:)
     integer :: i
@@ -210,6 +250,10 @@ contains
   end subroutine set_coefs
 
   subroutine set_coefs_1d(this, f, coefs)
+    !
+    ! determine c_{i} so f_{n} = \sum c_{i} phi_{ni}.
+    ! Here f_{n} indicates the initially given point.
+    !
     type(abscissa), intent(in) :: this
     real(dp), intent(in) :: f(:,:)
     real(dp), intent(inout) :: coefs(:,:)
@@ -326,6 +370,8 @@ contains
   end subroutine init_abscissa_interpolant
 
   function find_interval(this, x) result(idx)
+    ! return the index i so t(i) <= x <= t(i+1)
+    ! Note that x has to satisfy t(1) <= x <= t(n+k)
     class(abscissa), intent(in) :: this
     real(dp), intent(in) :: x
     integer :: idx, i, k, nt
@@ -357,6 +403,9 @@ contains
   end function find_interval
 
   recursive function basis_function(this, i, k, x) result(f)
+    !
+    ! basis function phi^{k}_{i}(x) using the Cox-de Boor recursion formula
+    !
     type(abscissa), intent(in) :: this
     integer, intent(in) :: i, k
     real(dp), intent(in) :: x
