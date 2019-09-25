@@ -10,12 +10,16 @@ program test
   select case(n_dim)
 
   case(1)
+    write(*,"(a)") "test function: f(x) = cos(x)"
     call test_1d()
   case(2)
+    write(*,"(a)") "test function: f(x,y) = cos(x) cos(y)"
     call test_2d()
   case(3)
+    write(*,"(a)") "test function: f(x,y,z) = cos(x) cos(y) cos(z)"
     call test_3d()
   case(4)
+    write(*,"(a)") "test function: f(w,x,y,z) = cos(w) cos(x) cos(y) cos(z)"
     call test_4d()
   case default
   end select
@@ -24,14 +28,14 @@ contains
 
   subroutine test_1d()
     type(spline) :: sp
-    real(8) :: xmin = 0.d0, xmax = 8.d0
+    real(8) :: xmin = -2.d0, xmax = 2.d0
     integer :: n, k = 4
     real(8), allocatable :: x(:), f(:)
     real(8) :: max_err
     integer :: i
     real(8) :: ti
 
-    n = 10
+    n = 50
     allocate(x(n), f(n))
     do i = 1, n
       x(i) = xmin + dble(i-1) / dble(n-1) * (xmax - xmin)
@@ -71,8 +75,8 @@ contains
 
   subroutine test_2d()
     type(spline) :: sp
-    real(8) :: xmin = 0.d0, xmax = 8.d0
-    real(8) :: ymin = 0.d0, ymax = 8.d0
+    real(8) :: xmin = -2.d0, xmax = 2.d0
+    real(8) :: ymin = -2.d0, ymax = 2.d0
     integer :: nx, ny, kx=4, ky=4
     real(8), allocatable :: x(:), y(:), f(:,:), f1d(:)
     real(8) :: max_err
@@ -130,9 +134,9 @@ contains
 
   subroutine test_3d()
     type(spline) :: sp
-    real(8) :: xmin = 0.d0, xmax = 8.d0
-    real(8) :: ymin = 0.d0, ymax = 8.d0
-    real(8) :: zmin = 0.d0, zmax = 8.d0
+    real(8) :: xmin = -2.d0, xmax = 2.d0
+    real(8) :: ymin = -2.d0, ymax = 2.d0
+    real(8) :: zmin = -2.d0, zmax = 2.d0
     integer :: nx, ny, nz, kx=4, ky=4, kz = 4
     real(8), allocatable :: x(:), y(:), z(:), f(:,:,:), f1d(:)
     real(8) :: max_err
@@ -167,9 +171,9 @@ contains
     write(*,"(a,f12.6,a)") "constructor: ", omp_get_wtime() - ti, " sec"
     deallocate(x, y, z, f, f1d)
 
-    nx = 60
-    ny = 60
-    nz = 60
+    nx = 20
+    ny = 20
+    nz = 20
     allocate(x(nx),y(ny),z(nz),f(nx,ny,nz))
     do i = 1, nx
       x(i) = xmin + dble(i-1) / dble(nx-1) * (xmax - xmin)
@@ -202,20 +206,20 @@ contains
 
   subroutine test_4d()
     type(spline) :: sp
-    real(8) :: wmin = 0.d0, wmax = 8.d0
-    real(8) :: xmin = 0.d0, xmax = 8.d0
-    real(8) :: ymin = 0.d0, ymax = 8.d0
-    real(8) :: zmin = 0.d0, zmax = 8.d0
+    real(8) :: wmin = -2.d0, wmax = 2.d0
+    real(8) :: xmin = -2.d0, xmax = 2.d0
+    real(8) :: ymin = -2.d0, ymax = 2.d0
+    real(8) :: zmin = -2.d0, zmax = 2.d0
     integer :: nw, nx, ny, nz, kw=4, kx=4, ky=4, kz = 4
     real(8), allocatable :: w(:), x(:), y(:), z(:), f(:,:,:,:), f1d(:)
     real(8) :: max_err
     integer :: i, j, k, l
     real(8) :: ti
 
-    nw = 15
-    nx = 15
-    ny = 15
-    nz = 15
+    nw = 8
+    nx = 8
+    ny = 8
+    nz = 8
     allocate(w(nw), x(nx), y(ny), z(nz), f(nw,nx,ny,nz), f1d(nw*nx*ny*nz))
     do i = 1, nw
       w(i) = wmin + dble(i-1) / dble(nw-1) * (wmax - wmin)
@@ -246,10 +250,10 @@ contains
     write(*,"(a,f12.6,a)") "constructor: ", omp_get_wtime() - ti, " sec"
     deallocate(w, x, y, z, f, f1d)
 
-    nw = 60
-    nx = 60
-    ny = 60
-    nz = 60
+    nw = 10
+    nx = 10
+    ny = 10
+    nz = 10
     allocate(w(nw),x(nx),y(ny),z(nz),f(nw,nx,ny,nz))
     do i = 1, nw
       w(i) = wmin + dble(i-1) / dble(nw-1) * (wmax - wmin)
@@ -275,7 +279,7 @@ contains
       do j = 1, nx
         do k = 1, ny
           do l = 1, nz
-            !write(15,"(4f8.4, 2es18.6)") w(i), x(j), y(k), z(l), f(i,j,k,l), f4(w(i),x(j),y(k),z(l))
+            write(15,"(4f8.4, 2es18.6)") w(i), x(j), y(k), z(l), f(i,j,k,l), f4(w(i),x(j),y(k),z(l))
             max_err = max(max_err, abs(f(i,j,k,l) - f4(w(i),x(j),y(k),z(l))))
           end do
         end do
@@ -289,24 +293,24 @@ contains
   function f1(x)
     real(8), intent(in) :: x
     real(8) :: f1
-    f1 = cos(x) * exp(-x**2)
+    f1 = cos(x)
   end function f1
 
   function f2(x,y)
     real(8), intent(in) :: x, y
     real(8) :: f2
-    f2 = cos(x) * cos(y) * exp(-x**2-y**2)
+    f2 = cos(x)*cos(y)
   end function f2
 
   function f3(x,y,z)
     real(8), intent(in) :: x, y, z
     real(8) :: f3
-    f3 = cos(x) * cos(y) * cos(z) * exp(-x**2-y**2-z**2)
+    f3 = cos(x) * cos(y) * cos(z)
   end function f3
 
   function f4(w,x,y,z)
     real(8), intent(in) :: w, x, y, z
     real(8) :: f4
-    f4 = cos(w) * cos(x) * cos(y) * cos(z) * exp(-w**2-x**2-y**2-z**2)
+    f4 = cos(w) * cos(x) * cos(y) * cos(z)
   end function f4
 end program test

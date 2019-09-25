@@ -9,11 +9,13 @@ module NdSpline
   ! with the k-th order polynomial basis function phi^{k}_{i}(x) and coefficient c_{i}.
   ! Note that the c_{i} is determined so f(x_{i}) = \sum c_{i} phi^{k}_{i}(x).
   !
-  ! The generalization to the n dimenstion is pretty straightforward.
+  ! With the tensor product form, the generalization to the n dimension is pretty straightforward.
   ! For example, in the 4 dimensional, a function f(w,x,y,z) can be
   ! f(w,x,y,z) = sum c_{ijkl} phi^{kw}_{i}(w) phi^{kx}_{j}(x) phi^{ky}_{k}(y) phi^{kz}_{l}(z)
   !
-  ! see G. D. Knott, "Interpolating cubic splines", Springer 2000 for details.
+  ! See G. D. Knott, "Interpolating cubic splines", Springer 2000 for theoretical details.
+  !
+  ! See the test.F90 in "main" directory how to use.
   use, intrinsic :: iso_fortran_env
   implicit none
   integer, parameter :: dp = real64
