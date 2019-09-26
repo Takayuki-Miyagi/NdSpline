@@ -51,15 +51,15 @@ contains
     deallocate(x, f)
 
     n = 100
-    allocate(x(n))
+    allocate(x(n),f(n))
     do i = 1, n
       x(i) = xmin + dble(i-1) / dble(n-1) * (xmax - xmin)
     end do
 
     ti = omp_get_wtime()
-    f = sp%interpolate([n], x)
+    call sp%interpolate([n], x)
     write(*,"(a,f12.6,a)") "interpolate: ", omp_get_wtime() - ti, " sec"
-
+    f = sp%fs
     call sp%fin()
 
     max_err = 0.d0
@@ -114,9 +114,9 @@ contains
     do i = 1, ny
       y(i) = ymin + dble(i-1) / dble(ny-1) * (ymax - ymin)
     end do
-    f1d = sp%interpolate([nx, ny], [x,y])
+    call sp%interpolate([nx, ny], [x,y])
     ti = omp_get_wtime()
-    f = reshape(f1d, shape(f))
+    f = reshape(sp%fs, shape(f))
     write(*,"(a,f12.6,a)") "interpolate: ", omp_get_wtime() - ti, " sec"
 
     max_err = 0.d0
@@ -185,9 +185,9 @@ contains
       z(i) = zmin + dble(i-1) / dble(nz-1) * (zmax - zmin)
     end do
     ti = omp_get_wtime()
-    f1d = sp%interpolate([nx, ny, nz], [x,y,z])
+    call sp%interpolate([nx, ny, nz], [x,y,z])
     write(*,"(a,f12.6,a)") "interpolate: ", omp_get_wtime() - ti, " sec"
-    f = reshape(f1d, shape(f))
+    f = reshape(sp%fs, shape(f))
 
     max_err = 0.d0
     open(15, file="file_3d.dat")
@@ -268,9 +268,9 @@ contains
       z(i) = zmin + dble(i-1) / dble(nz-1) * (zmax - zmin)
     end do
     ti = omp_get_wtime()
-    f1d = sp%interpolate([nw, nx, ny, nz], [w, x, y, z])
+    call sp%interpolate([nw, nx, ny, nz], [w, x, y, z])
     write(*,"(a,f12.6,a)") "interpolate: ", omp_get_wtime() - ti, " sec"
-    f = reshape(f1d, shape(f))
+    f = reshape(sp%fs, shape(f))
 
     max_err = 0.d0
     open(15, file="file_4d.dat")

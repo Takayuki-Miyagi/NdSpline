@@ -56,6 +56,7 @@ module NdSpline
   type :: spline
     type(abscissa), allocatable :: Ndrctn(:)
     real(dp), allocatable :: coefs(:)
+    real(dp), allocatable :: fs(:)
     integer :: ndim = 0
     integer :: nf_in = 0
   contains
@@ -96,6 +97,7 @@ contains
       call this%Ndrctn(n)%fin()
     end do
     deallocate(this%coefs)
+    if(allocated(this%fs)) deallocate(this%fs)
   end subroutine fin_spline
 
   subroutine init_spline(this, ks, ns, xs, fs)
@@ -150,21 +152,20 @@ contains
     call this%set_coefs()
   end subroutine init_spline
 
-  function interpolate(this, ns, xs) result(f)
+  subroutine interpolate(this, ns, xs)
     ! interpolation using the matrix-matrix multiplication
     ! inputs:
     ! 'ns': 1 dimenstional array specifying the dimenstion
     ! 'xs': 1 dimenstional array specifying the interpolants
     ! output:
-    ! 'f': 1 dimenstional array
     class(spline), intent(inout) :: this
     integer, intent(in) :: ns(:)
     real(dp), intent(in) :: xs(:)
-    real(dp), allocatable :: f(:)
     type(grid_interpolant) :: grid
     real(dp), allocatable :: tmp_org(:,:), tmp_int(:,:)
     integer :: i, n
 
+    if(allocated(this%fs)) deallocate(this%fs)
     call grid%init(ns, xs)
     if(this%ndim /= grid%ndim) then
       write(*,"(a)") "Error in interpolate of spline: Dimension would be wrong!"
@@ -189,11 +190,11 @@ contains
       deallocate(tmp_org)
       n = n * grid%Ndrctn(i)%n / this%Ndrctn(i)%nx
     end do
-    allocate(f(grid%n_interpolant))
-    f = reshape(tmp_int, shape(f))
+    allocate(this%fs(grid%n_interpolant))
+    this%fs = reshape(tmp_int, shape(this%fs))
     deallocate(tmp_int)
     call grid%fin()
-  end function interpolate
+  end subroutine interpolate
 
   subroutine interpolate_1d(this, x, coefs, f)
     !
@@ -244,6 +245,7 @@ contains
       deallocate(tmp_coef)
     end do
     this%coefs = reshape(transpose(tmp), shape(this%coefs))
+    deallocate(tmp)
   end subroutine set_coefs
 
   subroutine set_coefs_1d(this, f, coefs)
