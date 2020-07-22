@@ -89,6 +89,8 @@ module NdSpline
     generic :: fin => fin_grid_interpolant
   end type grid_interpolant
 
+  logical, private :: is_extrapolation=.false.
+
 contains
   subroutine fin_spline(this)
     class(spline), intent(inout) :: this
@@ -100,7 +102,7 @@ contains
     if(allocated(this%fs)) deallocate(this%fs)
   end subroutine fin_spline
 
-  subroutine init_spline(this, ks, ns, xs, fs)
+  subroutine init_spline(this, ks, ns, xs, fs, extrapolation)
     ! constructor of spline
     ! inputs:
     ! 'ks' : 1 dimenstionl array for the order of polymial for each abscissa
@@ -112,6 +114,7 @@ contains
     class(spline), intent(inout) :: this
     integer, intent(in) :: ks(:), ns(:)
     real(dp), intent(in) :: xs(:), fs(:)
+    logical, intent(in), optional :: extrapolation
     integer :: n, n_start, n_end, n_f
 
     if(size(ks) /= size(ns)) then
@@ -119,6 +122,7 @@ contains
       write(*,"(2i3)") size(ks), size(ns)
       stop
     end if
+    if( present(extrapolation) ) is_extrapolation = extrapolation
 
     n_f = 1
     do n = 1, size(ns)
@@ -370,7 +374,7 @@ contains
 
   function find_interval(this, x) result(idx)
     ! return the index i so t(i) <= x <= t(i+1)
-    ! Note that x has to satisfy t(1) <= x <= t(n+k)
+    ! Note that x has to satisfy t(1) <= x <= t(n+k), when the extrapolation is turned off.
     class(abscissa), intent(in) :: this
     real(dp), intent(in) :: x
     integer :: idx, i, k, nt
@@ -378,16 +382,32 @@ contains
     k = this%k
     nt = size(this%t)
     idx = 0
-    if(x < minval(this%t) .or. x > maxval(this%t)) return
-
-    if(this%t(k) <= x .and. x <= this%t(k+1)) then
-      idx = k
-      return
+    if( .not. is_extrapolation) then
+      if(x < minval(this%t) .or. x > maxval(this%t)) return
     end if
 
-    if(this%t(nt-k) <= x .and. x <= this%t(nt-k+1)) then
-      idx = nt-k
-      return
+    if( .not. is_extrapolation ) then
+      if(this%t(k) <= x .and. x <= this%t(k+1)) then
+        idx = k
+        return
+      end if
+    else
+      if(x <= this%t(k+1)) then
+        idx = k
+        return
+      end if
+    end if
+
+    if( .not. is_extrapolation ) then
+      if(this%t(nt-k) <= x .and. x <= this%t(nt-k+1)) then
+        idx = nt-k
+        return
+      end if
+    else
+      if(this%t(nt-k) <= x) then
+        idx = nt-k
+        return
+      end if
     end if
 
     do i = 1, nt - 1
