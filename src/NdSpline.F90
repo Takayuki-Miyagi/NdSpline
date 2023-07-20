@@ -40,6 +40,7 @@ module NdSpline
   private :: init_abscissa_interpolant
   private :: find_interval
   private :: basis_function
+  private :: basis_function_rec
 
   type :: abscissa
     real(dp), allocatable :: x(:), t(:)
@@ -457,19 +458,20 @@ contains
     end do
   end function find_interval
 
-  recursive function basis_function(this, i, k, x) result(f)
-    !
+  recursive function basis_function_rec(this, i, k, xi, x) result(f)
+    !   
     ! basis function phi^{k}_{i}(x) using the Cox-de Boor recursion formula
-    !
+    !   
     type(abscissa), intent(in) :: this
     integer, intent(in) :: i, k
+    integer, intent(in) :: xi
     real(dp), intent(in) :: x
     real(dp) :: f, c1, c2
 
     f = 0.0_dp
     if( i + k > size(this%t)) return
     if( k == 1 ) then
-      if(i == this%find_interval(x)) f = 1.0_dp
+      if(i == xi) f = 1.0_dp
       return
     end if
     c1 = (x - this%t(i)) / (this%t(i+k-1) - this%t(i))
@@ -478,6 +480,17 @@ contains
     if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 ) c2 = 0.0_dp
     if( abs(this%t(i+k-1) - this%t(i)) < 1.d-8 .and. abs(x - this%t(i)) < 1.d-8 ) c1 = 1.0_dp
     if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 .and. abs(x - this%t(i+k)) < 1.d-8 ) c2 = 1.0_dp
-    f = basis_function(this, i, k-1, x) * c1 + basis_function(this, i+1, k-1, x) * c2
+    f = basis_function_rec(this, i, k-1, xi, x) * c1 + basis_function_rec(this, i+1, k-1, xi, x) * c2
+  end function basis_function_rec
+
+  function basis_function(this, i, k, x) result(f)
+    !   
+    ! basis function phi^{k}_{i}(x) using the Cox-de Boor recursion formula
+    !   
+    type(abscissa), intent(in) :: this
+    integer, intent(in) :: i, k
+    real(dp), intent(in) :: x
+    real(dp) :: f, c1, c2
+    f = basis_function_rec(this, i, k, this%find_interval(x), x)
   end function basis_function
 end module NdSpline
