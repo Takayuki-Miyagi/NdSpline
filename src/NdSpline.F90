@@ -474,12 +474,17 @@ contains
       if(i == xi) f = 1.0_dp
       return
     end if
-    c1 = (x - this%t(i)) / (this%t(i+k-1) - this%t(i))
-    c2 = (this%t(i+k)-x) / (this%t(i+k) - this%t(i+1))
+    c1 = 0.5_dp; c2 = 0.5_dp
     if( abs(this%t(i+k-1) - this%t(i)) < 1.d-8 ) c1 = 0.0_dp
     if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 ) c2 = 0.0_dp
     if( abs(this%t(i+k-1) - this%t(i)) < 1.d-8 .and. abs(x - this%t(i)) < 1.d-8 ) c1 = 1.0_dp
     if( abs(this%t(i+k) - this%t(i+1)) < 1.d-8 .and. abs(x - this%t(i+k)) < 1.d-8 ) c2 = 1.0_dp
+    if(abs(c1-0.5_dp) < 1.d-2) then
+      c1 = (x - this%t(i)) / (this%t(i+k-1) - this%t(i))
+    end if
+    if(abs(c2-0.5_dp) < 1.d-2) then
+      c2 = (this%t(i+k)-x) / (this%t(i+k) - this%t(i+1))
+    end if
     f = basis_function_rec(this, i, k-1, xi, x) * c1 + basis_function_rec(this, i+1, k-1, xi, x) * c2
   end function basis_function_rec
 
