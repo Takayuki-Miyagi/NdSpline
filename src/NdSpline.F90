@@ -108,7 +108,7 @@ contains
     if(allocated(this%fs)) deallocate(this%fs)
   end subroutine fin_spline
 
-  subroutine init_spline(this, ks, ns, xs, fs, extrapolation)
+  subroutine init_spline(this, ks, ns, xs, fs, extrapolation, skip_solve)
     ! constructor of spline
     ! inputs:
     ! 'ks' : 1 dimenstionl array for the order of polymial for each abscissa
@@ -117,10 +117,18 @@ contains
     !           x, y, ... are non dcreasing one dimensional array
     ! 'fs' : 1 dimenstionl array for the points of each abscissa. One can use fs = reshape( f, (nx*ny*...) )
     !         Here f is multidimenstional array f(i,j,...). i,j,... have to be correspond to x,y,..., respectively.
+    ! 'skip_solve' : optional, default .false. When .true., skips solving for the spline
+    !         coefficients (set_coefs) -- only the abscissa/knot setup is done. Use this only
+    !         when the caller never calls get_coefs()/interpolate() on this object and only
+    !         needs get_Bmatrix() (which depends solely on the knot setup, not on 'fs'); 'fs'
+    !         may then be a dummy array (e.g. all zeros). Saves the LU factorization + solve
+    !         that set_coefs would otherwise always perform.
     class(spline), intent(inout) :: this
     integer, intent(in) :: ks(:), ns(:)
     real(dp), intent(in) :: xs(:), fs(:)
     logical, intent(in), optional :: extrapolation
+    logical, intent(in), optional :: skip_solve
+    logical :: do_skip
     integer :: n, n_start, n_end, n_f
 
     if(size(ks) /= size(ns)) then
@@ -159,7 +167,9 @@ contains
 
     allocate(this%coefs(size(fs)))
     this%coefs = fs
-    call this%set_coefs()
+    do_skip = .false.
+    if(present(skip_solve)) do_skip = skip_solve
+    if(.not. do_skip) call this%set_coefs()
   end subroutine init_spline
 
   subroutine interpolate(this, ns, xs)
