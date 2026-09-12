@@ -76,15 +76,15 @@ contains
   subroutine test_2d()
     type(spline) :: sp
     real(8) :: xmin = -2.d0, xmax = 2.d0
-    real(8) :: ymin = -2.d0, ymax = 2.d0
+    real(8) :: ymin = -1.d0, ymax = 3.d0
     integer :: nx, ny, kx=4, ky=4
     real(8), allocatable :: x(:), y(:), f(:,:), f1d(:)
     real(8) :: max_err
     integer :: i, j
     real(8) :: ti
 
-    nx = 20
-    ny = 20
+    nx = 5
+    ny = 6
     allocate(x(nx), y(ny), f(nx,ny), f1d(nx*ny))
     do i = 1, nx
       x(i) = xmin + dble(i-1) / dble(nx-1) * (xmax - xmin)
@@ -105,8 +105,8 @@ contains
     write(*,"(a,f12.6,a)") "constructor: ", omp_get_wtime() - ti, " sec"
     deallocate(x, y, f, f1d)
 
-    nx = 100
-    ny = 100
+    nx = 10
+    ny = 10
     allocate(x(nx),y(ny),f(nx,ny))
     do i = 1, nx
       x(i) = xmin + dble(i-1) / dble(nx-1) * (xmax - xmin)
@@ -135,17 +135,17 @@ contains
   subroutine test_3d()
     type(spline) :: sp
     real(8) :: xmin = -2.d0, xmax = 2.d0
-    real(8) :: ymin = -2.d0, ymax = 2.d0
-    real(8) :: zmin = -2.d0, zmax = 2.d0
+    real(8) :: ymin = -1.d0, ymax = 3.d0
+    real(8) :: zmin = -3.d0, zmax = 1.d0
     integer :: nx, ny, nz, kx=4, ky=4, kz = 4
     real(8), allocatable :: x(:), y(:), z(:), f(:,:,:), f1d(:)
     real(8) :: max_err
     integer :: i, j, k
     real(8) :: ti
 
-    nx = 15
-    ny = 15
-    nz = 15
+    nx = 5
+    ny = 6
+    nz = 7
     allocate(x(nx), y(ny), z(nz), f(nx,ny,nz), f1d(nx*ny*nz))
     do i = 1, nx
       x(i) = xmin + dble(i-1) / dble(nx-1) * (xmax - xmin)
@@ -299,13 +299,15 @@ contains
   function f2(x,y)
     real(8), intent(in) :: x, y
     real(8) :: f2
-    f2 = cos(x)*cos(y)
+!    f2 = cos(x)*cos(y)
+    f2 = cos(x)*(y**3+y**2)
   end function f2
 
   function f3(x,y,z)
     real(8), intent(in) :: x, y, z
     real(8) :: f3
-    f3 = cos(x) * cos(y) * cos(z)
+    !f3 = cos(x) * cos(y) * cos(z)
+    f3 = cos(x) * cos(y) * z**2
   end function f3
 
   function f4(w,x,y,z)
